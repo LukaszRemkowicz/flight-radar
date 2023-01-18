@@ -1,0 +1,25 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+fastapi = "*"
+hypercorn = "*"
+typer = "*"
+requests = "*"
+tenacity = "*"
+pydantic = "*"
+asyncpg = "*"
+databases = "*"
+sqlalchemy = "*"
+psycopg2 = "*"
+
+[dev-packages]
+pytest = "*"
+pytest-sugar = "*"
+requests-mock = "*"
+pytest-asyncio = "*"
+
+[requires]
+python_version = "3.11"
