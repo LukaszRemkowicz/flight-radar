@@ -1,7 +1,6 @@
 import logging
 from asyncio import sleep
 from random import randint
-from typing import List
 
 import tenacity
 from requests import exceptions
@@ -15,11 +14,12 @@ logger: logging.Logger = get_module_logger("scrapper_cfg")
 
 
 def error_callback(retry_state: tenacity.RetryCallState):
+    """Tenacity error handler"""
+
     state: HTTPError = retry_state.outcome._exception  # noqa
+
     if isinstance(state, exceptions.ConnectionError):
-        return exceptions.ConnectionError(
-            retry_state.outcome._exception  # noqa
-        )
+        return exceptions.ConnectionError(retry_state.outcome._exception)  # noqa
     elif isinstance(state, AttributeError):
         logger.error("Request failed")
         raise AttributeError(str(state))
@@ -27,9 +27,9 @@ def error_callback(retry_state: tenacity.RetryCallState):
         raise NewConnectionError
     elif isinstance(state, ConnectionError):
         logger.error(str(ConnectionError))
-    elif state.response.status_code in [500, 502]:
-        message: List[str] = [state.response.content, state.response.reason]
-        return ''
+    # elif state.response.status_code in [500, 502]:
+    #     message: List[str] = [state.response.content, state.response.reason]
+    #     return ""
     else:
         return (lambda err_state: logger.info(err_state.outcome.exception()))(
             retry_state
@@ -37,7 +37,7 @@ def error_callback(retry_state: tenacity.RetryCallState):
 
 
 class ConfigHandler:
-    """ Configurator that supply our scrapper with endpoints, utils and headers """
+    """Configurator that gives scrapper headers and config"""
 
     headers: RequestHeaders = RequestHeaders()
     __config_repo: ConfigRepo
@@ -49,17 +49,15 @@ class ConfigHandler:
         self.__config_repo = repo()
 
     async def sleep(self):
-        """
-        delay between requests
-        """
+        """delay between requests"""
         if not self.updated:
             await self.get_tenacity_config()
         return await sleep(
-                randint(
-                    self.config.min_wait_before,
-                    self.config.max_wait_before,
-                )
+            randint(
+                self.config.min_wait_before,
+                self.config.max_wait_before,
             )
+        )
 
     async def get_tenacity_config(self):
         self.config = await self.__config_repo.get_config()
