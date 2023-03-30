@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional, Dict, List, Any
+from typing import Optional, Dict, List
 
 from pydantic import BaseModel, Json
 
@@ -28,7 +28,7 @@ class FlightOut(FlightsBase):
     city_to: str
     bag_limit: dict
     price_conversion: dict
-    response: Json[Any]
+    response: Json
     created_at: Optional[datetime]
     updated_at: Optional[datetime]
 
@@ -44,7 +44,7 @@ class FlightsIn(FlightsBase):
     countryFrom: dict
     cityFrom: str
     cityTo: str
-    baglimit: dict
+    baglimit: dict  # noqa
     conversion: dict
 
 

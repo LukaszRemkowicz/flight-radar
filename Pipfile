@@ -12,10 +12,11 @@ tenacity = "*"
 pydantic = "*"
 asyncpg = "*"
 databases = "*"
-sqlalchemy = "*"
+sqlalchemy = "==1.4.46"
 psycopg2 = "*"
 tortoise-orm = "*"
 aerich = "*"
+python-dotenv = "*"
 
 [dev-packages]
 pytest = "*"
@@ -26,6 +27,9 @@ black = "*"
 pytest-docker = "*"
 pytest-mock = "*"
 pytest-docker-compose = "*"
+pytest-docker = "*"
+pytest-mock = "*"
+pytest-env = "*"
 
 [requires]
 python_version = "3.11"
