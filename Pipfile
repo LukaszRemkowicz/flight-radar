@@ -17,7 +17,6 @@ psycopg2 = "*"
 tortoise-orm = "*"
 aerich = "*"
 python-dotenv = "*"
-tortoise-orm = "*"
 aerich = "*"
 
 [dev-packages]
