@@ -18,6 +18,10 @@ def get_module_logger(mod_name) -> logging:
     logger: logging = logging.getLogger(mod_name)
     stream_handler: logging = logging.StreamHandler()
     log_dir = os.path.join(ROOT_PATH + os.sep + os.pardir, "logs")
+
+    if not os.path.exists(log_dir):
+        os.mkdir(log_dir)
+
     file_handler: logging = logging.FileHandler(
         f"{log_dir}/{datetime.now().date()}.log"
     )

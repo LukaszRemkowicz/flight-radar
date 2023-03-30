@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import sys
 from typing import TYPE_CHECKING
@@ -150,3 +151,9 @@ def flight_out_model() -> FlightOut:
     data.pop("updated_at")
 
     return FlightOut(**data)
+
+
+@pytest.fixture(autouse=True)
+def disable_file_handler(mocker):
+    # Replace the FileHandler with a NullHandler that does not write to a file
+    mocker.patch.object(logging, "FileHandler", logging.NullHandler)
