@@ -1,6 +1,7 @@
 import logging
 import os
-from typing import List, Dict, Tuple, Type
+from time import sleep
+from typing import List, Dict, Tuple, Type, Optional
 from urllib import parse as urllib_parse
 
 import sqlalchemy
@@ -15,7 +16,7 @@ from sqlalchemy import (
     JSON,
     Float,
     TIMESTAMP,
-    DateTime,
+    DateTime, create_engine,
 )
 
 from settings import get_module_logger, DATABASES
@@ -35,6 +36,8 @@ class ConfigureTable:
             "json": JSON,
             "Float": Float,
         }
+        self.model = FlightsModel
+        self.db_name: Optional[str] = None
 
     @staticmethod
     def validate_string_field(params_) -> String:
@@ -47,26 +50,33 @@ class ConfigureTable:
         date_field = models.DateField(auto_add=True, now=True)
         char_field = models.CharField(max_length=12)
         """
-        column_type_: Integer | String | Type[
-            TIMESTAMP
-        ] | DateTime = self.column_type_mapping.get(
-            getattr(getattr(FlightsModel, field_), "type")
-        )
-        params_: dict = getattr(FlightsModel, field_).__dict__
+        try:
+            column_type_: Integer | String | Type[
+                TIMESTAMP
+            ] | DateTime = self.column_type_mapping.get(
+                getattr(getattr(self.model, field_), "type_class")
+            )
+        except AttributeError:
+            breakpoint()
 
-        if getattr(getattr(FlightsModel, field_), "type") == "String":
+        params_: dict = getattr(self.model, field_).__dict__
+
+        if getattr(getattr(self.model, field_), "type_class") == "String":
+            # if not params_.get('max_length'):
+            #     breakpoint()
             column_type_ = self.validate_string_field(params_)
-        if getattr(getattr(FlightsModel, field_), "type") == "Date":
+
+        if getattr(getattr(self.model, field_), "type_class") == "Date":
             column_type_ = DateTime(timezone=True)
             if field_ == "created_at":
-                ...
+                params_["server_default"] = func.now()
                 # column_type_ = TIMESTAMP
             if field_ == "updated_at":
                 # column_type_ = TIMESTAMP
                 params_["onupdate"] = func.current_timestamp()
 
-        if params_.get("type"):
-            params_.pop("type")
+        if params_.get("type_class"):
+            params_.pop("type_class")
         if params_.get("max_length"):
             params_.pop("max_length")
         if params_.get("date"):
@@ -78,13 +88,20 @@ class ConfigureTable:
 
         return column_type_, params_
 
+    def set_up_db_name(self, name: Optional[str] = None):
+        """Returns db name"""
+        if not name:
+            self.db_name = self.model.__name__.lower()
+        else:
+            self.db_name = name
+
     def create_table(self) -> Table:
         """Create Table object with specified columns"""
         _metadata = sqlalchemy.MetaData()
         _flights_fields = [
             field
-            for field, _ in FlightsModel.__dict__.items()
-            if not callable(getattr(FlightsModel, field)) and not field.startswith("__")
+            for field, _ in self.model.__dict__.items()
+            if not callable(getattr(self.model, field)) and not field.startswith("__")
         ]
 
         columns: List[Column] = [
@@ -97,41 +114,71 @@ class ConfigureTable:
             column_type, params = self.__validate_params(field)
 
             columns.append(Column(field, column_type, **params))
+        self.set_up_db_name()
 
-        return Table(FlightsModel.__name__.lower(), _metadata, *columns)
+        return Table(self.db_name, _metadata, *columns)
 
 
 class DbInstance:
     """Create DB instance"""
 
-    @staticmethod
-    def create_db_instance() -> Database:
-        """Returns DB instance"""
-        database_dict: dict = DATABASES.get("default")
+    def __init__(self, config: Optional[dict] = None):
+        self.db_config = config or DATABASES
+        self.db_url: Optional[str] = None
+
+    def get_db_url(self):
+        database_dict: dict = self.db_config.get("default")
         db_credentials: str = (
             f"{database_dict.get('USER')}:{database_dict.get('PASSWORD')}"
         )
         db_server_config: str = f"{database_dict.get('HOST')}:{database_dict.get('PORT')}/{database_dict.get('NAME')}"
-        ssl_mode: str = urllib_parse.quote_plus(
-            str(os.environ.get("ssl_mode", "prefer"))
-        )
-        database_url: str = f"postgresql://{db_credentials}@{db_server_config}?sslmode={ssl_mode}"  # noqa
-        return Database(database_url)
+        # ssl_mode: str = urllib_parse.quote_plus(
+        #     str(os.environ.get("ssl_mode", "prefer"))
+        # )
+        database_url: str = f"postgresql+asyncpg://{db_credentials}@{db_server_config}"  # noqa
+        return database_url
+
+    def create_db_instance(self) -> Database:
+        """Returns DB instance"""
+        # database_dict: dict = self.db_config.get("default")
+        # db_credentials: str = (
+        #     f"{database_dict.get('USER')}:{database_dict.get('PASSWORD')}"
+        # )
+        # db_server_config: str = f"{database_dict.get('HOST')}:{database_dict.get('PORT')}/{database_dict.get('NAME')}"
+        # ssl_mode: str = urllib_parse.quote_plus(
+        #     str(os.environ.get("ssl_mode", "prefer"))
+        # )
+        # database_url: str = f"postgresql://{db_credentials}@{db_server_config}?sslmode={ssl_mode}"  # noqa
+        # self.db_url = database_url
+
+        return Database(self.get_db_url())
+
+# db_instance: DbInstance = DbInstance()
 
 
-flight_table_schema: Table = ConfigureTable().create_table()
-database: Database = DbInstance().create_db_instance()
+if not os.environ.get('TEST'):
+    database: Database = DbInstance().create_db_instance()
+    flight_table_schema: Table = ConfigureTable().create_table()
+    # metadata = MetaData()
+    # engine = create_engine(db_instance.get_db_url())
+    # metadata.create_all(engine)
+    metadata = sqlalchemy.MetaData()
+    engine = create_engine(DbInstance().get_db_url())
+    metadata.create_all(engine)
+else:
+    database: None = None
+    flight_table_schema: None = None
 
 # engine = sqlalchemy.create_engine(DATABASE_URL, pool_size=3, max_overflow=0)
-# engine = create_engine(DATABASE_URL, convert_unicode=True)
-# metadata.create_all(engine)
 
 
 async def db_start() -> None:
     """DB initiator"""
+    sleep(2)
     await database.connect()
 
 
 async def db_close() -> None:
     """Close DB"""
+    sleep(2)
     await database.disconnect()
