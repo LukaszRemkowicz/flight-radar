@@ -14,12 +14,18 @@ asyncpg = "*"
 databases = "*"
 sqlalchemy = "*"
 psycopg2 = "*"
+tortoise-orm = "*"
+aerich = "*"
 
 [dev-packages]
 pytest = "*"
 pytest-sugar = "*"
 requests-mock = "*"
 pytest-asyncio = "*"
+black = "*"
+pytest-docker = "*"
+pytest-mock = "*"
+pytest-docker-compose = "*"
 
 [requires]
 python_version = "3.11"
