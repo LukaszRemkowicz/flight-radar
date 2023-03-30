@@ -1,6 +1,5 @@
-from datetime import datetime
 from random import choice
-from typing import Dict, Optional, Type
+from typing import Dict, Optional
 
 from pydantic import BaseModel
 
@@ -32,7 +31,7 @@ class Config(BaseModel):
 class RequestHeaders(BaseModel):
     """Headers params"""
 
-    user_agent: str = None
+    user_agent: Optional[str] = None
     origin: str = ORIGIN
     accept: str = "application/json, text/plain, */*"
     accept_encoding: str = "gzip, deflate, br"
@@ -40,7 +39,7 @@ class RequestHeaders(BaseModel):
     method: str = "GET"
 
     def __call__(self) -> Dict:
-        """set different user agent on every object call"""
+        """call different user agent on every object call"""
         self.set_user_agent()
         return self.dict()
 
@@ -49,83 +48,7 @@ class RequestHeaders(BaseModel):
         self.user_agent = choice(USER_AGENTS)
 
     def dict(self, **kwargs):
-        """
-        properly serialized headers
-        """
+        """serialize headers"""
         serialized = super().dict()
         serialized["User-agent"] = serialized.pop("user_agent")
         return serialized
-
-
-class CharFieldModel:
-    type_class = "String"
-
-    def __init__(
-        self,
-        max_length: int = 0,
-        primary_key: bool = False,
-        default: Optional[str] = None,
-    ):
-        self.max_length = max_length
-        self.primary_key = primary_key
-        self.default = default
-
-
-class IntegerFieldModel:
-    type_class = "Integer"
-
-    def __init__(self, primary_key: bool = False):
-        self.primary_key = primary_key
-
-
-class FloatFieldModel:
-    type_class = "Float"
-
-
-class DateFieldModel:
-    type_class = "Date"
-
-    def __init__(
-        self,
-        date: Optional[str] = None,
-        auto_add: bool = False,
-        now: bool = False,
-    ):
-        if now:
-            self.date = datetime.now()
-        elif date:
-            self.validate_date()
-            self.date = date
-        self.auto_add = auto_add
-
-    def validate_date(self):
-        try:
-            datetime.strptime("%d/%m/%Y", self.date)
-        except ValueError:
-            breakpoint()
-            raise ValueError
-
-
-class JsonFieldModel:
-    type_class = "json"
-
-
-class Models:
-    def __init__(
-        self,
-        char_field: Type[CharFieldModel],
-        integer_field: Type[IntegerFieldModel],
-        date_field: Type[DateFieldModel],
-        float_field: Type[FloatFieldModel],
-        json_field: Type[JsonFieldModel],
-    ):
-        self.CharField = char_field
-        self.IntegerField = integer_field
-        self.DateField = date_field
-        self.FloatField = float_field
-        self.JsonField = json_field
-
-
-models = Models(
-    CharFieldModel, IntegerFieldModel, DateFieldModel, FloatFieldModel, JsonFieldModel
-)

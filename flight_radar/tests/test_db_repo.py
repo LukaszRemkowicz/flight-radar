@@ -6,7 +6,7 @@ from asyncpg import Record
 from databases import Database
 from sqlalchemy import Table
 
-from models.pydantic_validators import FlightOut
+from models.entities import FlightOut
 from repos.db_repo import DbRepo, BaseRepo
 from utils.db_config import db_start, db_close
 
@@ -21,7 +21,7 @@ async def test_db_repo(test_db_credentials) -> None:
     assert db_instance.is_connected
     assert isinstance(db_instance, Database)
 
-    assert test_db_credentials.get('NAME') in db_instance.url.components.path
+    assert test_db_credentials.get("NAME") in db_instance.url.components.path
 
     await db_close()
 
@@ -30,7 +30,7 @@ async def test_db_repo(test_db_credentials) -> None:
 
 @pytest.mark.asyncio
 async def test_base_repo() -> None:
-    """ Test if BaseDB repo is instance of DBRepo """
+    """Test if BaseDB repo is instance of DBRepo"""
     db_repo: BaseRepo = BaseRepo()
 
     assert isinstance(db_repo, BaseRepo)
@@ -39,7 +39,7 @@ async def test_base_repo() -> None:
 
 @pytest.mark.asyncio
 async def test_creating_document(flight_out_model: FlightOut, table: Table) -> None:
-    """ Test if create method work fine """
+    """Test if create method work fine"""
 
     await db_start()
 

@@ -1,10 +1,14 @@
 import logging
 from datetime import datetime
 import os
-from typing import Optional
+
+from dotenv import load_dotenv
 
 
 ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
+
+env_path: str = os.path.join(ROOT_PATH, ".env")
+load_dotenv(env_path)
 
 
 def get_module_logger(mod_name) -> logging:
@@ -35,20 +39,35 @@ MIN_WAIT_BEFORE: int = 2
 
 TEQUILA_API_KEY: str = ""
 
-DATABASES: Optional[dict]
 
-DATABASES = {
-    "default": {
-        "NAME": "",
-        "USER": "",
-        "PASSWORD": "",
-        "HOST": "",
-        "PORT": "",
+def get_db_credentials() -> dict:
+    return {
+        "host": os.getenv("DB_HOST", "localhost"),
+        "port": os.getenv("DB_PORT", 5432),
+        "user": os.getenv("DB_USERNAME", "postgres"),
+        "password": os.getenv("DB_PASSWORD", "postgres"),
+        "database": os.getenv("DB_NAME", "postgres"),
     }
+
+
+DB_CONFIG: dict = {
+    "connections": {
+        "default": {
+            "engine": "tortoise.backends.asyncpg",
+            "credentials": get_db_credentials(),
+        },
+    },
+    "apps": {
+        "models": {
+            "models": ["__main__", "models.models", "aerich.models"],
+            "default_connection": "default",
+        },
+    },
+    "default_connection": "default",
 }
 
 try:
-    if not os.environ.get('TEST'):
+    if not os.environ.get("TEST"):
         from _local_settings import *
 except Exception as e:
     print(f"No local settings. {e}")

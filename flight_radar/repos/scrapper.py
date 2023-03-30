@@ -1,11 +1,10 @@
-import json
 import logging
 from typing import Optional
 
 import requests
 from requests import Response
 
-from models.pydantic_validators import FlightsListIn
+from models.entities import FlightsListIn
 from models.types import UrlConfigs
 from repos.scrapper_config_handler import ConfigHandler
 from settings import get_module_logger, TEQUILA_API_KEY
