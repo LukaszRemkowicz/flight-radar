@@ -14,9 +14,9 @@ asyncpg = "*"
 databases = "*"
 sqlalchemy = "==1.4.46"
 psycopg2 = "*"
-python-dotenv = "*"
 tortoise-orm = "*"
 aerich = "*"
+python-dotenv = "*"
 
 [dev-packages]
 requests-mock = "*"
