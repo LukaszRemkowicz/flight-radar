@@ -58,37 +58,38 @@ class RequestHeaders(BaseModel):
 
 
 class CharFieldModel:
+    type_class = "String"
+
     def __init__(
         self,
         max_length: int = 0,
         primary_key: bool = False,
         default: Optional[str] = None,
-        type_class: str = "String",
     ):
         self.max_length = max_length
         self.primary_key = primary_key
         self.default = default
-        self.type = type_class
 
 
 class IntegerFieldModel:
-    def __init__(self, primary_key: bool = False, type_class: str = "Integer"):
+    type_class = "Integer"
+
+    def __init__(self, primary_key: bool = False):
         self.primary_key = primary_key
-        self.type = type_class
 
 
 class FloatFieldModel:
-    def __init__(self, type_class: str = "Float"):
-        self.type = type_class
+    type_class = "Float"
 
 
 class DateFieldModel:
+    type_class = "Date"
+
     def __init__(
         self,
         date: Optional[str] = None,
         auto_add: bool = False,
         now: bool = False,
-        type_class: str = "Date",
     ):
         if now:
             self.date = datetime.now()
@@ -96,18 +97,17 @@ class DateFieldModel:
             self.validate_date()
             self.date = date
         self.auto_add = auto_add
-        self.type = type_class
 
     def validate_date(self):
         try:
             datetime.strptime("%d/%m/%Y", self.date)
         except ValueError:
+            breakpoint()
             raise ValueError
 
 
 class JsonFieldModel:
-    def __init__(self, type_class: str = "json"):
-        self.type = type_class
+    type_class = "json"
 
 
 class Models:

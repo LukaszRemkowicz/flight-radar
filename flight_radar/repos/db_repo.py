@@ -2,8 +2,9 @@ import json
 import logging
 from typing import Optional, List
 
+from asyncpg import Record
 from databases import Database
-from databases.backends.postgres import Record
+# from databases.backends.postgres import Record
 from sqlalchemy import Table, text, and_
 from sqlalchemy.sql import Select, Insert
 
@@ -11,7 +12,7 @@ from errors import InstanceIsNotValid, NoKwargsGiven
 from models.entities import FlightsModel, ModelTypes
 from models.pydantic_validators import FlightOut, FlightOutList
 from settings import DATABASES, get_module_logger
-from utils.db_config import database, flight_table_schema
+from utils.db_config import flight_table_schema
 
 logger: logging.Logger = get_module_logger("db_repo")
 
@@ -19,7 +20,6 @@ logger: logging.Logger = get_module_logger("db_repo")
 class DbRepo:
     """Base DB responsible for returning database instance"""
 
-    db_name: str = DATABASES.get("default").get("NAME")
     table: Optional[Table] = None
     model: ModelTypes = None
 
@@ -28,9 +28,8 @@ class DbRepo:
 
     async def get_database(self) -> Database:
         """Get configured Database"""
-        assert self.db_name is not None, f"Please set database. {self.db_name}"
+        from utils.db_config import database
         self.db: Database = database
-
         return self.db
 
 

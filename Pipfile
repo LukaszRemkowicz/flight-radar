@@ -12,14 +12,18 @@ tenacity = "*"
 pydantic = "*"
 asyncpg = "*"
 databases = "*"
-sqlalchemy = "*"
+sqlalchemy = "==1.4.46"
 psycopg2 = "*"
+python-dotenv = "*"
 
 [dev-packages]
 pytest = "*"
 pytest-sugar = "*"
 requests-mock = "*"
 pytest-asyncio = "*"
+pytest-docker = "*"
+pytest-mock = "*"
+pytest-env = "*"
 
 [requires]
 python_version = "3.11"

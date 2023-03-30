@@ -1,5 +1,10 @@
 import logging
 from datetime import datetime
+import os
+from typing import Optional
+
+
+ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
 
 
 def get_module_logger(mod_name) -> logging:
@@ -8,7 +13,7 @@ def get_module_logger(mod_name) -> logging:
     """
     logger: logging = logging.getLogger(mod_name)
     stream_handler: logging = logging.StreamHandler()
-    log_dir = os.path.join(os.path.normpath(os.getcwd() + os.sep + os.pardir), "logs")
+    log_dir = os.path.join(ROOT_PATH + os.sep + os.pardir, "logs")
     file_handler: logging = logging.FileHandler(
         f"{log_dir}/{datetime.now().date()}.log"
     )
@@ -29,7 +34,10 @@ MAX_WAIT_BEFORE: int = 2
 MIN_WAIT_BEFORE: int = 2
 
 TEQUILA_API_KEY: str = ""
-DATABASES: dict = {
+
+DATABASES: Optional[dict]
+
+DATABASES = {
     "default": {
         "NAME": "",
         "USER": "",
@@ -40,6 +48,7 @@ DATABASES: dict = {
 }
 
 try:
-    from _local_settings import *
+    if not os.environ.get('TEST'):
+        from _local_settings import *
 except Exception as e:
     print(f"No local settings. {e}")

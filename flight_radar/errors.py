@@ -15,3 +15,8 @@ class NoKwargsGiven(CustomBaseException):
 
 class NoFlightWithGivenParams(CustomBaseException):
     default_message = "There is no flights with given params"
+
+
+class TestDBWrongCredentialsError(CustomBaseException):
+    default_message = "Credentials for test DB are wrong. " \
+                      "Please be sure that you have valid variables in .env file in root directory"
