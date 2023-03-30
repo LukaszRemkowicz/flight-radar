@@ -21,7 +21,7 @@ jobs:
 
       - name: Create env file
         run: |
-          echo "${{ secrets.ENV_FILE }}" > .env
+          cd flight_radar && echo "${{ secrets.ENV_FILE }}" > .env && ls -la
 
       - name: Install dependencies
         run: |

@@ -18,3 +18,22 @@ class BadRequestException(Exception):
 
 class ValidationError(Exception):
     ...
+
+
+class TestDBWrongCredentialsError(CustomBaseException):
+    default_message = (
+        "Credentials for test DB are wrong. "
+        "Please be sure that you have valid variables in .env file in root directory"
+    )
+
+
+class InstanceIsNotValid(CustomBaseException):
+    default_message = "Instance is not valid. Should be List instead"
+
+
+class NoKwargsGiven(CustomBaseException):
+    default_message = "There is now kwargs given. Database cant be searched"
+
+
+class NoFlightWithGivenParams(CustomBaseException):
+    default_message = "There is no flights with given params"

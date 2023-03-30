@@ -2,7 +2,7 @@ import json
 import logging
 from typing import Type
 
-from errors import NoFlightWithGivenParams
+from utils.exceptions import NoFlightWithGivenParams
 from repos.db_repo import FlightRadarRepo
 from utils.scrapper_config import ConfigRepo
 from models.entities import FlightOut, FlightsListIn

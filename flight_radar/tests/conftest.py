@@ -1,43 +1,40 @@
-import asyncio
 import json
+import logging
 import os
 import sys
-from pathlib import Path
 from typing import TYPE_CHECKING
 
-import sqlalchemy
-from sqlalchemy import Table
-
-import flight_radar.errors as errors
-
-os.environ["TEST"] = "True"
-
 import requests
-from databases import Database
 
 import flight_radar.settings as settings
 import pytest
+from pytest_mock import MockerFixture
+
 
 if TYPE_CHECKING:
-    from pytest_docker.plugin import Services, MockerFixture
+    from pytest_docker.plugin import Services
 
 root_dir = settings.ROOT_PATH
 sys.path.append(root_dir)
 
-from flight_radar.utils.db_config import DbInstance, ConfigureTable
-from utils.scrapper_config import ConfigRepo  # noqa
+from utils.scrapper_config import ConfigRepo
+from utils.exceptions import TestDBWrongCredentialsError
 from models.entities import FlightOut
-from repos.scrapper import TequilaAPI  # noqa
-from repos.scrapper_config_handler import ConfigHandler  # noqa
+from repos.scrapper import TequilaAPI
+from repos.scrapper_config_handler import ConfigHandler
 
 from dotenv import dotenv_values
 
-env_path: str = os.path.join(str(Path(root_dir).parent), ".env")
+env_path: str = os.path.join(settings.ROOT_PATH, ".env")
 env_values = dict(dotenv_values(env_path))
 
-TEST_DB_PASSWORD = env_values.get("POSTGRES_TEST_PASSWORD")
-TEST_DB_USER = env_values.get("POSTGRES_TEST_USER")
-TEST_DB_NAME = env_values.get("POSTGRES_TEST_DB_NAME")
+TEST_DB_PASSWORD = env_values.get("POSTGRES_TEST_PASSWORD") or os.getenv(
+    "POSTGRES_TEST_PASSWORD"
+)
+TEST_DB_USER = env_values.get("POSTGRES_TEST_USER") or os.getenv("POSTGRES_TEST_USER")
+TEST_DB_NAME = env_values.get("POSTGRES_TEST_DB_NAME") or os.getenv(
+    "POSTGRES_TEST_DB_NAME"
+)
 
 
 @pytest.fixture(autouse=True)
@@ -76,7 +73,9 @@ def flight_params() -> dict:
 
 @pytest.fixture(scope="session")
 def docker_compose_file(pytestconfig):  # noqa
-    docker_path: str = os.path.join(str(pytestconfig.rootdir), "docker-compose.yml")
+    docker_path: str = os.path.join(
+        settings.ROOT_PATH, "tests", "docker-compose-test.yml"
+    )
     return docker_path
 
 
@@ -95,81 +94,39 @@ def test_db_credentials():
 @pytest.fixture(scope="session")
 def db_connection(
     docker_services: "Services", docker_ip: str, test_db_credentials: dict
-) -> Database:
+) -> dict:
     """
     :param test_db_credentials:
     :param docker_services: required -> pytest-docker plugin fixture
     :param docker_ip: required -> pytest-docker plugin fixture
 
-    :return Daabase: db instance
+    :return dict: db credentials
     """
-    # new_config = {
-    #     'default': {
-    #         'NAME': 'postgres',
-    #         'USER': 'postgres',
-    #         'HOST': docker_ip,
-    #         'PASSWORD': settings.TEST_DB_PASSWORD,
-    #         'PORT': docker_services.port_for('test_db', 5430) or 5430,
-    #     }
-    # }
-    if (
-        not test_db_credentials.get("USER")
-        or not test_db_credentials.get("NAME")
-        or not test_db_credentials.get("PASSWORD")
-    ):
-        raise errors.TestDBWrongCredentialsError()
+    user: str = env_values.get("POSTGRES_TEST_USER")
+    password: str = env_values.get("POSTGRES_TEST_PASSWORD")
+    db_name: str = env_values.get("POSTGRES_TEST_DB_NAME")
 
-    new_config = {
-        "default": {
-            **test_db_credentials,
-            "HOST": docker_ip,
-            "PORT": docker_services.port_for("test_db", 5430) or 5430,
-        }
+    if not user or not db_name or not password:
+        raise TestDBWrongCredentialsError()
+
+    port: int = docker_services.port_for("test_db", 5432) or 5450
+    credentials: dict = {
+        "host": docker_ip,
+        "port": port,
+        "user": user,
+        "password": password,
+        "database": db_name,
     }
-    db_instance: DbInstance = DbInstance(new_config)
-    database: Database = db_instance.create_db_instance()
 
-    async def main():
-        from sqlalchemy.dialects import postgresql
-
-        metadata = sqlalchemy.MetaData()
-        dialect = postgresql.dialect()
-
-        table_obj: ConfigureTable = ConfigureTable()
-        # table_obj.set_up_db_name(TEST_DB_NAME)
-        table: Table = table_obj.create_table()
-        await asyncio.sleep(2)
-        await database.connect()
-
-        schema = sqlalchemy.schema.CreateTable(table, if_not_exists=True)
-        query = str(schema.compile(dialect=dialect))
-        await database.execute(query=query)
-        await database.disconnect()
-
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())
-    #
-    # database.execute(CreateTable(table))
-    # database.disconnect()
-    # engine = create_engine(
-    #     db_instance.get_db_url(),
+    # url = f"https://{docker_ip}:{port}"
+    # docker_services.wait_until_responsive(
+    #     timeout=30.0, pause=0.1, check=lambda: is_responsive(url)
     # )
-    #
-    # conn = engine.connect()
-    #
-    # database.execute(CreateTable(table))
-    # # metadata = sqlalchemy.MetaData()
-    # # engine = create_engine(db_instance.get_db_url())
-    # # metadata.create_all(engine)
-    #
-    # database.disconnect()
-
-    # database = await db_start()
-    return database
+    return credentials
 
 
 @pytest.fixture(autouse=True)
-def _mock_db_connection(mocker: "MockerFixture", db_connection: Database) -> bool:
+def _mock_db_connection(mocker: "MockerFixture", db_connection: dict) -> bool:
     """
     This will alter application database connection settings, once and for all the tests
     in unit tests module.
@@ -177,35 +134,10 @@ def _mock_db_connection(mocker: "MockerFixture", db_connection: Database) -> boo
     :param db_connection: connection class
     :return: True upon successful monkey-patching
     """
-    mocker.patch("utils.db_config.database", db_connection)
-    return True
-
-
-@pytest.fixture(scope="session")
-def table() -> Table:
-
-    table_obj: ConfigureTable = ConfigureTable()
-    # table_obj.set_up_db_name(TEST_DB_NAME)
-    table: Table = table_obj.create_table()
-
-    return table
-
-
-@pytest.fixture(autouse=True)
-def _mock_table_creation(mocker: "MockerFixture", table):
-    """
-    This will create database table instance for all the tests.
-    :param mocker: pytest-mock plugin fixture
-    :param table_creation
-    :return: True upon successful monkey-patching
-    """
-
-    # mocker.patch('utils.db_config.ConfigureTable.db_name', return_value=TEST_DB_NAME)
-    # # mocker.patch.object(ConfigureTable, 'db_name', new_callable=PropertyMock(return_value=TEST_DB_NAME))
-
-    mocker.patch.object(ConfigureTable, "create_table", return_value=table)
-    mocker.patch("utils.db_config.flight_table_schema", table)
-
+    mocker.patch("settings.get_db_credentials", db_connection)
+    config = settings.DB_CONFIG
+    config["connections"]["default"]["credentials"] = db_connection
+    mocker.patch("utils.utils.get_db_connections", return_value=config)
     return True
 
 
@@ -219,3 +151,9 @@ def flight_out_model() -> FlightOut:
     data.pop("updated_at")
 
     return FlightOut(**data)
+
+
+@pytest.fixture(autouse=True)
+def disable_file_handler(mocker):
+    # Replace the FileHandler with a NullHandler that does not write to a file
+    mocker.patch.object(logging, "FileHandler", logging.NullHandler)
