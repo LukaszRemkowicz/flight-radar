@@ -4,7 +4,6 @@ import sys
 from typing import TYPE_CHECKING
 
 import requests
-from databases import Database
 
 import flight_radar.settings as settings
 import pytest
@@ -126,7 +125,7 @@ def db_connection(
 
 
 @pytest.fixture(autouse=True)
-def _mock_db_connection(mocker: "MockerFixture", db_connection: Database) -> bool:
+def _mock_db_connection(mocker: "MockerFixture", db_connection: dict) -> bool:
     """
     This will alter application database connection settings, once and for all the tests
     in unit tests module.
