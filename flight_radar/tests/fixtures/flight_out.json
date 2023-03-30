@@ -1,0 +1,48 @@
+{
+    "distance": 3897.04,
+    "bags_price": {
+        "1": 159.256,
+        "2": 318.495
+      },
+    "availability": {
+        "seats": 5
+      },
+    "airlines": [
+        "FR"
+      ],
+    "route": [{"flight_no": 4333}, {"flight_no": 4333} ],
+    "booking_token": "EbMocQnuEtndLNWqe9Ijitpbk0hQ8HhjYOfUjKS5ij8GiN77Y4cEcVhO2_vnJVzweFv2RrsAYQJ8bRsnqASrqb",
+    "deep_link": "https://test_link",
+    "local_arrival": "2023-01-31T11:00:00.000Z",
+    "local_departure": "2023-01-30T18:05:00.000Z",
+    "price": 376,
+    "flight_to_code": "KTW",
+    "flight_from_code": "TFS",
+    "country_to_code": "PL",
+    "country_from_code": "ES",
+    "city_from": "Tenerife",
+    "city_to": "Katowice",
+    "bag_limit":  {
+        "hand_height": 40,
+        "hand_length": 55,
+        "hand_weight": 10,
+        "hand_width": 20,
+        "hold_dimensions_sum": 319,
+        "hold_height": 119,
+        "hold_length": 119,
+        "hold_weight": 20,
+        "hold_width": 81,
+        "personal_item_height": 25,
+        "personal_item_length": 40,
+        "personal_item_weight": 10,
+        "personal_item_width": 20
+      },
+    "price_conversion": {
+        "EUR": 79.744136,
+        "PLN": 374
+      },
+    "response": {
+    },
+    "created_at": "",
+    "updated_at": ""
+}

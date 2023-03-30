@@ -1,17 +1,11 @@
 import pytest
 import requests_mock
 
-from flight_radar.models.config import ConfigRepo
-from flight_radar.repos.scrapper import TequilaAPI
-from flight_radar.repos.scrapper_config_handler import ConfigHandler
+from repos.scrapper_config_handler import ConfigHandler
+from models.pydantic_validators import FlightsListIn
+from models.types import UrlConfigs
 
 EXAMPLE_URL = "https://example.url"
-
-
-@pytest.fixture
-def scrapper_api() -> TequilaAPI:
-    scrapper_config: ConfigHandler = ConfigHandler(ConfigRepo)
-    return TequilaAPI(scrapper_config)
 
 
 def test_if_scrapper_is_configured_properly(scrapper_api) -> None:
@@ -27,3 +21,13 @@ async def test_fetch_method(scrapper_api) -> None:
         mock_request.get(EXAMPLE_URL, json=content)
         response = await scrapper_api._TequilaAPI__fetch_data(EXAMPLE_URL, content)  # type: ignore
     assert response == content
+
+
+@pytest.mark.asyncio
+async def test_get_flights(flight_params, load_response_data, scrapper_api) -> None:
+    """Test if valid flight data is returned"""
+    with requests_mock.Mocker() as mock_request:
+        mock_request.get(UrlConfigs.TEQUILA_URL, json=load_response_data)
+        response: FlightsListIn = await scrapper_api.get_flight(flight_params)
+    assert isinstance(response, FlightsListIn)
+    assert isinstance(response.flights, list)
