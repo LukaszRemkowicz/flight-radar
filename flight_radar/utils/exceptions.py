@@ -18,3 +18,9 @@ class BadRequestException(Exception):
 
 class ValidationError(Exception):
     ...
+
+
+class TestDBWrongCredentialsError(CustomBaseException):
+    default_message = "Credentials for test DB are wrong. " \
+                      "Please be sure that you have valid variables in .env file in root directory"
+
