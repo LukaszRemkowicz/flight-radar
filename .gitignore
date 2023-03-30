@@ -121,7 +121,7 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env
+flight_radar/.env
 .venv
 env/
 venv/

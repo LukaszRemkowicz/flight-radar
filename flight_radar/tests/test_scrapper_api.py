@@ -2,7 +2,7 @@ import pytest
 import requests_mock
 
 from repos.scrapper_config_handler import ConfigHandler
-from models.pydantic_validators import FlightsListIn
+from models.entities import FlightsListIn
 from models.types import UrlConfigs
 
 EXAMPLE_URL = "https://example.url"

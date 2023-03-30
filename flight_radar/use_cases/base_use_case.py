@@ -3,13 +3,13 @@ import logging
 from typing import Type
 
 from errors import NoFlightWithGivenParams
-from models.config import ConfigRepo
-from models.pydantic_validators import FlightOut, FlightsListIn
-from repos.db_repo import FlightRepo
+from repos.db_repo import FlightRadarRepo
+from utils.scrapper_config import ConfigRepo
+from models.entities import FlightOut, FlightsListIn
 from repos.scrapper_config_handler import ConfigHandler
 from repos import ReposTypes
 from settings import get_module_logger
-from utils.helpers import field_mapper
+from utils.utils import field_mapper
 
 logger: logging.Logger = get_module_logger("base_use_case")
 
@@ -17,8 +17,8 @@ logger: logging.Logger = get_module_logger("base_use_case")
 class BaseUseCase:
     def __init__(
         self,
-        repo_db: Type[FlightRepo],
-        repo_scrapper: Type[ReposTypes],
+        repo_db: Type["FlightRadarRepo"],
+        repo_scrapper: Type["ReposTypes"],
     ) -> None:
         self.db_repo = repo_db()
         self.__scrapper_config: ConfigHandler = ConfigHandler(ConfigRepo)

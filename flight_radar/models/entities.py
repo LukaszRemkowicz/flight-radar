@@ -1,38 +1,52 @@
-from typing import Union
+from datetime import datetime
+from typing import Optional, Dict, List
 
-from .types import models
-
-
-class FlightsModel:
-    flight_to_code = models.CharField(max_length=12)
-    flight_from_code = models.CharField(max_length=12)
-
-    country_to_code = models.CharField(max_length=12)
-    country_from_code = models.CharField(max_length=12)
-
-    city_from = models.CharField(max_length=124)
-    city_to = models.CharField(max_length=124)
-
-    distance = models.FloatField()
-
-    bags_price = models.JsonField()
-    bag_limit = models.JsonField()
-
-    availability = models.JsonField()
-    airlines = models.JsonField()
-    route = models.JsonField()
-
-    booking_token = models.CharField(max_length=1024)
-    deep_link = models.CharField(max_length=2048)
-    local_arrival = models.CharField(max_length=1024)
-    local_departure = models.CharField(max_length=1024)
-
-    price = models.FloatField()
-    price_conversion = models.JsonField()
-
-    response = models.JsonField()
-    created_at = models.DateField(auto_add=True, now=True)
-    updated_at = models.DateField(now=True)
+from pydantic import BaseModel, Json
 
 
-ModelTypes = Union[FlightsModel]
+class FlightsBase(BaseModel):
+    distance: float
+    bags_price: dict
+    availability: dict
+    airlines: List[str] | dict
+    route: List["Dict"]
+
+    booking_token: str
+    deep_link: str
+    local_arrival: str
+    local_departure: str
+
+    price: float
+
+
+class FlightOut(FlightsBase):
+    flight_to_code: str
+    flight_from_code: str
+    country_to_code: str
+    country_from_code: str
+    city_from: str
+    city_to: str
+    bag_limit: dict
+    price_conversion: dict
+    response: Json
+    # created_at: Optional[datetime]
+    # updated_at: Optional[datetime]
+
+
+class FlightOutList(BaseModel):
+    flights: List[FlightOut]
+
+
+class FlightsIn(FlightsBase):
+    flyTo: str
+    flyFrom: str
+    countryTo: dict
+    countryFrom: dict
+    cityFrom: str
+    cityTo: str
+    baglimit: dict  # noqa
+    conversion: dict
+
+
+class FlightsListIn(BaseModel):
+    flights: List[FlightsIn]

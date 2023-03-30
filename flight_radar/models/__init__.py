@@ -1,1 +1,1 @@
-from .entities import ModelTypes
+from .models import ModelTypes

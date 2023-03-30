@@ -1,17 +1,48 @@
 version: '3.4'
 
 services:
-  test_db:
-    ports:
-      - "5430:5432"
-    image: postgres:15.1-alpine
-    environment:
-      - POSTGRES_DB=${POSTGRES_TEST_DB_NAME}
-      - POSTGRES_USER=${POSTGRES_TEST_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_TEST_PASSWORD}
+
+  flight:
+    image: flight
+    container_name: flight_app
+    build:
+      context: .
+      target: development
+    volumes:
+      - .:/flight
+      - postgres_vol:/vol/postgres
     restart: always
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}" ]
+    depends_on:
+      - db
+  
+  db:
+    image: postgres:15-alpine
+    container_name: flight_db
+    environment:
+      - DB_HOST=${DB_HOST}
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    ports:
+      - "${DB_PORT}:5432"
+    expose:
+      - ${DB_PORT}
+    restart: always
+    volumes:
+      - .:/discord
+      - postgres_vol:/var/lib/postgresql/data
+
+  pgadmin_discord:
+    container_name: discord_pgadmin
+    image: dpage/pgadmin4
+    restart: always
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD}
+    ports:
+      - "5051:80"
+    depends_on:
+      - db
 
 volumes:
-  postgres:
+  postgres_vol:
