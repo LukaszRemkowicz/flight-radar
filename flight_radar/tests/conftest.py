@@ -4,12 +4,11 @@ import os
 import sys
 from typing import TYPE_CHECKING
 
-import requests
-
-import flight_radar.settings as settings
 import pytest
+import requests
 from pytest_mock import MockerFixture
 
+import flight_radar.settings as settings
 
 if TYPE_CHECKING:
     from pytest_docker.plugin import Services
@@ -17,13 +16,12 @@ if TYPE_CHECKING:
 root_dir = settings.ROOT_PATH
 sys.path.append(root_dir)
 
-from utils.scrapper_config import ConfigRepo
-from utils.exceptions import TestDBWrongCredentialsError
+from dotenv import dotenv_values
 from models.entities import FlightOut
 from repos.scrapper import TequilaAPI
-from repos.scrapper_config_handler import ConfigHandler
-
-from dotenv import dotenv_values
+from repos.scrapper_config_handler import TenacityAdapter
+from utils.exceptions import TestDBWrongCredentialsError
+from utils.scrapper_config import ConfigRepo
 
 env_path: str = os.path.join(settings.ROOT_PATH, ".env")
 env_values = dict(dotenv_values(env_path))
@@ -47,7 +45,7 @@ def disable_network_calls(monkeypatch):
 
 @pytest.fixture
 def scrapper_api() -> TequilaAPI:
-    scrapper_config: ConfigHandler = ConfigHandler(ConfigRepo)
+    scrapper_config: TenacityAdapter = TenacityAdapter(ConfigRepo)
     return TequilaAPI(scrapper_config)
 
 

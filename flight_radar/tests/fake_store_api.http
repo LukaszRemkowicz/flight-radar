@@ -1,0 +1,6 @@
+### This file is just for storing an useful API for testing
+
+### Fake Store API
+GET https://fakestoreapi.com/products
+Accept: application/json
+

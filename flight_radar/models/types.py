@@ -1,11 +1,14 @@
+from enum import StrEnum
 from random import choice
 from typing import Dict, Optional
 
 from pydantic import BaseModel
 
 
-class UrlConfigs:
-    TEQUILA_URL = "https://api.tequila.kiwi.com/v2/search?"
+class TequilaUrls:
+    BASE_URL = "https://api.tequila.kiwi.com/"
+    FLIGHT_SEARCH = BASE_URL + "v2/search?"
+    FIND_LOCATION = BASE_URL + "locations/query?"
 
 
 ORIGIN: str = ""
@@ -21,11 +24,11 @@ USER_AGENTS: list = [
 
 
 class Config(BaseModel):
-    min_wait_between: int
-    max_wait_between: int
-    min_wait_before: int
-    max_wait_before: int
-    max_attempts: int
+    MIN_WAIT_BETWEEN: int
+    MAX_WAIT_BETWEEN: int
+    MIN_WAIT_BEFORE: int
+    MAX_WAIT_BEFORE: int
+    MAX_ATTEMPTS: int
 
 
 class RequestHeaders(BaseModel):
@@ -49,6 +52,14 @@ class RequestHeaders(BaseModel):
 
     def dict(self, **kwargs):
         """serialize headers"""
-        serialized = super().dict()
+        serialized = super().model_dump()
         serialized["User-agent"] = serialized.pop("user_agent")
         return serialized
+
+
+class CityTypes(StrEnum):
+    """City types"""
+
+    WARSZAWA_MODLIN = "WMI"
+    TENERIFE = "TFS"
+    KATOVICE = "KTW"

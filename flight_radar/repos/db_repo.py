@@ -1,28 +1,56 @@
 import json
 import logging
-from typing import Optional, List
+from typing import List, Optional, Protocol
 
-from models.models import FlightsModel
-from models.entities import FlightOut, FlightOutList
-from settings import get_module_logger
+from logger import get_module_logger
+from models.entities import (
+    FlightRoutesFromDBList,
+    SCHEMAS_TYPES, BaseFlightModel,
+)
+
+from models.models import Flight, RequestModel
 
 logger: logging.Logger = get_module_logger("db_repo")
 
 
-class FlightRadarRepo:
+class FlightProtocol(Protocol):
+    async def create(self, data: SCHEMAS_TYPES) -> BaseFlightModel:
+        ...
 
-    model = FlightsModel
+    async def filter(self, **kwargs) -> BaseFlightModel | None:
+        ...
 
-    async def create(self, data: FlightOut) -> FlightsModel:
+
+class RequestModelRepo:
+    model = RequestModel
+
+    async def create(self, data: SCHEMAS_TYPES) -> BaseFlightModel:
         """Save flight to DB"""
-        res: FlightsModel = await self.model.create(**data.dict())  # noqa
-        logger.info(f"New object with id {res.pk} added to DB")
+
+        flight_data = data.model_dump()
+        res: RequestModel = await self.model.create(**flight_data)
         return res
 
-    async def filter(self, **kwargs) -> Optional[FlightOutList]:
+    async def filter(self, **kwargs) -> SCHEMAS_TYPES | None:
+        ...
+
+class FlightRepo:
+    model = Flight
+
+    async def create(self, data: SCHEMAS_TYPES) -> BaseFlightModel:
+        """Save flight to DB"""
+
+        flight_data = data.model_dump(exclude={"route"})
+        breakpoint()
+        res: Flight = await self.model.create(**flight_data)  # noqa
+        logger.info(f"New object with id {res.pk} added to DB")
+
+        return BaseFlightModel(**res.__dict__)
+
+    async def filter(self, **kwargs) -> SCHEMAS_TYPES | None:
         """Filter by given params."""
 
-        res: List[FlightsModel] = await self.model.filter(**kwargs)
+        res: List[Flight] = await self.model.filter(**kwargs)
         if not res:
             return None
         new_result: list = []
@@ -30,6 +58,6 @@ class FlightRadarRepo:
             new_element: dict = dict(element)
             new_element["response"] = json.dumps(element.response)
             new_result.append(new_element)
-        FlightOutList(flights=new_result)
+        FlightRoutesFromDBList(flights=new_result)
 
-        return FlightOutList(flights=new_result)
+        return FlightRoutesFromDBList(flights=new_result)

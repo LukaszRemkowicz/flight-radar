@@ -1,10 +1,8 @@
 from typing import Optional
 
 import pytest
-
-
 from models.entities import FlightOut, FlightOutList
-from repos.db_repo import FlightRadarRepo
+from repos.db_repo import FlightRepo
 from utils.utils import DBConnectionHandler
 
 
@@ -13,8 +11,7 @@ async def test_creating_document(flight_out_model: FlightOut) -> None:
     """Test create and filter methods for DB repo"""
 
     async with DBConnectionHandler():
-
-        db_repo: FlightRadarRepo = FlightRadarRepo()
+        db_repo: FlightRepo = FlightRepo()
         res_obj = await db_repo.create(flight_out_model)
 
         result: Optional[FlightOutList] = await db_repo.filter(pk=res_obj.pk)

@@ -1,7 +1,6 @@
 import pytest
-from tortoise import Tortoise, connections
-
 from tests.conftest import env_values
+from tortoise import Tortoise, connections
 from utils.utils import DBConnectionHandler
 
 

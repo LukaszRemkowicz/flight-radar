@@ -1,9 +1,17 @@
-[[source]]
-url = "https://pypi.org/simple"
-verify_ssl = true
-name = "pypi"
+#[[tool.poetry.source]]
+#name = "pypi"
+#url = "https://pypi.example.org/simple/"
+#priority = "primary"
 
-[packages]
+[tool.poetry]
+name = "FlightRadar"
+version = "0.0.1"
+description = ""
+authors = []
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
 fastapi = "*"
 hypercorn = "*"
 typer = "*"
@@ -17,9 +25,9 @@ psycopg2 = "*"
 tortoise-orm = "*"
 aerich = "*"
 python-dotenv = "*"
-aiohttp= "*"
+aiohttp = "*"
 
-[dev-packages]
+[tool.poetry.dev-dependencies]
 requests-mock = "*"
 black = "*"
 pytest = "*"
@@ -30,15 +38,17 @@ pytest-mock = "*"
 pytest-docker-compose = "*"
 pytest-env = "*"
 
-[requires]
-python_version = "3.11"
-
-[scripts]
+[tool.poetry.scripts]
 makemigrations = "aerich migrate"
 migrate = "aerich upgrade"
-
 
 [tool.aerich]
 tortoise_orm = "setup.AERICH_DB_CONFIG"
 location = "./migrations"
 src_folder = "./."
+[requires]
+python_version = "3.11"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
