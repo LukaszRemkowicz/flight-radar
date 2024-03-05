@@ -8,14 +8,13 @@ from models.types import CityTypes
 from repos.adapters import TequilaSessionAdapter, TenacityAdapter
 from repos.db_repo import FlightRepo, RequestModelRepo
 from repos.scrapper import TequilaAPI
-from settings import settings
 from use_cases.base_use_case import BaseUseCase
 from utils.decorators import be_async
 from utils.utils import DBConnectionHandler
 
 logger: logging.Logger = get_module_logger("cli")
 app = typer.Typer()
-tequila_session_adapter = TequilaSessionAdapter()
+tequila_session_adapter: TequilaSessionAdapter = TequilaSessionAdapter()
 tenacity: TenacityAdapter = TenacityAdapter()
 
 
@@ -42,19 +41,18 @@ async def get_flights(
         nights_in_dst_to=nights_in_dst_to,
     )
 
-    scrapper_repo = TequilaAPI(
-        # retry_policy=tenacity,
-        session_adapter=tequila_session_adapter
-    )
+    scrapper_repo = TequilaAPI(session_adapter=tequila_session_adapter)
     await tequila_session_adapter.initialize_session()
 
     async with DBConnectionHandler():
-        flight_use_case: BaseUseCase = BaseUseCase(
-            flight_request_repo=RequestModelRepo,
+        flight_use_case = BaseUseCase(
+            flight_request_repo=RequestModelRepo(),
             db_repo=FlightRepo,
             scrapper_repo=scrapper_repo,
         )
-        await flight_use_case.get_flights(input_data)
+        res = await flight_use_case.get_flights(input_data)
+        print(res)
+    await scrapper_repo.session_adapter.session.close()
 
     logger.info("Command get_tfs_data finished with success")
 

@@ -1,45 +1,29 @@
-import json
 import logging
-from typing import Type
+from dataclasses import dataclass
 
 from logger import get_module_logger
 from models.entities import (
     TequilaFlightList,
     TequilaFlightRoutes,
-    TequilaFlightResponse,
-    BaseFlightModel,
     RequestSchema,
 )
-from models.models import Flight
 from models.schemas import FlightSchema
-from repos import ReposTypes
-from repos.adapters import TequilaSessionAdapter, TenacityAdapter
-from repos.db_repo import FlightRepo, FlightProtocol
+from repos.db_repo import FlightProtocol
+from repos.interfaces import ScrapperProtocol
 from utils.exceptions import NoFlightWithGivenParams
+
 
 logger: logging.Logger = get_module_logger("base_use_case")
 
 
-tequila_session_adapter = TequilaSessionAdapter()
-
-
+@dataclass
 class BaseUseCase:
-    def __init__(
-        self,
-        flight_request_repo: Type[FlightProtocol],
-        db_repo: Type[FlightProtocol],
-        scrapper_repo,
-    ) -> None:
-        self.request_repo: FlightProtocol = flight_request_repo()
-        self.db_repo: FlightProtocol = db_repo()
-        self.scrapper_repo = scrapper_repo
+    flight_request_repo: FlightProtocol
+    db_repo: FlightProtocol
+    scrapper_repo: ScrapperProtocol
 
     async def get_flights(self, input_data: FlightSchema) -> None:
         """Get flights from scrapper and save to DB"""
-
-        # aaa = await self.scrapper_repo.get_destination_code("Gdansk")
-        # breakpoint()
-        # return aaa
 
         # kwargs_for_search: dict = {
         #     "fly_from": input_data.fly_from,
@@ -69,22 +53,20 @@ class BaseUseCase:
         if not flight_list or not flight_list.flights:
             raise NoFlightWithGivenParams
 
-        request_obj = await self.request_repo.create(
-            data=RequestSchema(
-                request_id=flight_list.search_id,
-                response=flight_list.model_dump(),
-                requested_flight_to=input_data.fly_to,
-                requested_flight_from=input_data.fly_from,
-            )
-        )
+        # request_obj = await self.flight_request_repo.create(
+        #     data=RequestSchema(
+        #         request_id=flight_list.search_id,
+        #         response=flight_list.model_dump(),
+        #         requested_flight_to=input_data.fly_to,
+        #         requested_flight_from=input_data.fly_from,
+        #     )
+        # )
 
         for flight in flight_list.flights:
-            breakpoint()
+            return flight.model_dump()
 
             routes: list[TequilaFlightRoutes] = flight.route
             flight.route = list()
-
-            breakpoint()
             aa = await self.db_repo.create(data=flight)
 
             new_val: FlightOut = FlightOut(**new_flight_data)
@@ -96,7 +78,6 @@ class BaseUseCase:
                 "local_departure": flight.local_departure,
                 "local_arrival": flight.local_arrival,
             }
-            # TODO dodac flight to a pozniej flight from z foreignkeyem
 
             exists = await self.db_repo.filter(**search_params)
             if exists:

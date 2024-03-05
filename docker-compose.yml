@@ -19,14 +19,14 @@ services:
     image: postgres:15-alpine
     container_name: flight_db
     environment:
-      - DB_HOST=${DB_HOST}
-      - POSTGRES_DB=${DB_NAME}
-      - POSTGRES_USER=${DB_USERNAME}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - DB_HOST=${DB__HOST}
+      - POSTGRES_DB=${DB__NAME}
+      - POSTGRES_USER=${DB__USERNAME}
+      - POSTGRES_PASSWORD=${DB__PASSWORD}
     ports:
-      - "${DB_PORT}:5432"
+      - "${DB__PORT}:5432"
     expose:
-      - ${DB_PORT}
+      - ${DB__PORT}
     restart: always
     volumes:
       - .:/discord

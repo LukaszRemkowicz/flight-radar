@@ -27,7 +27,6 @@ pytest-sugar = "*"
 pytest-asyncio = "*"
 pytest-docker = "*"
 pytest-mock = "*"
-pytest-docker-compose = "*"
 pytest-env = "*"
 
 [requires]

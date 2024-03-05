@@ -1,3 +1,5 @@
+from dataclasses import dataclass, field
+
 import requests
 from tenacity import (
     stop_after_attempt,
@@ -29,11 +31,11 @@ logger: logging.Logger = get_module_logger(__name__)
 import aiohttp
 
 
+@dataclass
 class TequilaSessionAdapter:
-    def __init__(self):
-        self._headers: RequestHeaders = RequestHeaders()
-        self._session = None
-        self.tequila_api_key = settings.TEQUILA_API_KEY
+    _headers: dict = field(default_factory=RequestHeaders())
+    _session: Optional[aiohttp.ClientSession] = None
+    tequila_api_key: str = settings.TEQUILA_API_KEY
 
     @property
     def session(self) -> aiohttp.ClientSession:
@@ -45,7 +47,7 @@ class TequilaSessionAdapter:
 
     @property
     def headers(self) -> dict[str, str]:
-        return self._headers()
+        return self._headers
 
     async def initialize_session(self):
         self._session = aiohttp.ClientSession()
@@ -54,9 +56,6 @@ class TequilaSessionAdapter:
     def prepare_headers(self):
         self._session.headers.update(self.headers)
         self._session.headers.update({"apikey": self.tequila_api_key})
-
-
-SESSION_TYPE = aiohttp.ClientSession
 
 
 def error_callback(retry_state: tenacity.RetryCallState) -> Optional[Tuple]:
@@ -97,9 +96,9 @@ class TenacityAdapter:
     """
 
     @staticmethod
-    def retry(config: Optional[Config] = None) -> Callable[
-        [Callable[..., Any]], Callable[..., Any]
-    ]:
+    def retry(
+        config: Optional[Config] = None,
+    ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         """
         Decorator function to apply tenacity retries to a target function.
 
@@ -109,6 +108,7 @@ class TenacityAdapter:
         Returns:
         - decorator: A decorator function to apply tenacity retries to a target function.
         """
+
         def decorator(fn: Callable[..., Any]) -> Callable[..., Any]:
             retry_settings: Config = config
 

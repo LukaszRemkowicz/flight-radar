@@ -1,37 +1,33 @@
-from typing import Protocol, Optional, Callable
+from dataclasses import dataclass
+from typing import Protocol, Optional
 
 import aiohttp
-import tenacity
 
 from models.entities import TequilaFlightList
-from models.types import Config
 
 
-class TenacityAdapterProtocol(Protocol):
-    def __init__(self, config: Config):
+class ScrapperProtocol(Protocol):
+    async def fetch(self, url: str, **kwargs) -> Optional[dict]:
         ...
 
-    async def sleep(self) -> None:
+    async def get_flight(self, kwargs: dict) -> Optional[TequilaFlightList]:
         ...
 
-    async def tenacity(self, fn: Callable) -> tenacity:
+    async def get_destination_code(self, city_name: str) -> str:
         ...
 
 
 class TequilaSessionAdapterProtocol(Protocol):
-    def __init__(self):
-        ...
-
     def prepare_headers(self) -> None:
         ...
 
     @property
-    def session(self) -> aiohttp.ClientSession:
-        """"""
+    def session(self) -> aiohttp.ClientSession:  # noqa
+        ...
 
     @property
-    def headers(self) -> dict[str, str]:
-        """"""
+    def headers(self) -> dict[str, str]:  # noqa
+        ...
 
     async def initialize_session(self) -> None:
         ...
